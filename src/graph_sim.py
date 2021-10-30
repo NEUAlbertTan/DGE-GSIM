@@ -202,15 +202,13 @@ class GraphSimTrainer(object):
         print("\n\nModel testing.\n")
         self.model.eval()
 
-        self.scores = np.zeros(len(self.dataset.test_graph_index_pairs))
+        scores = np.zeros(len(self.dataset.test_graph_index_pairs))
         self.ground_truth = np.zeros(len(self.dataset.test_graph_index_pairs))
         self.prediction_list = np.zeros(len(self.dataset.test_graph_index_pairs))
         prec_at_10_list = []
         prec_at_20_list = []
-        tau_list = []
-        rho_list = []
-        batch_ground_truth = []
-        batch_prediction_list = []
+        temp_gt = []
+        temp_pre = []
 
         for index, test_index_pair in tqdm(enumerate(self.dataset.test_graph_index_pairs)):
             data = self.dataset.get_data(test_index_pair, mode="test")
@@ -219,22 +217,20 @@ class GraphSimTrainer(object):
             self.ground_truth[index] = target
             prediction = self.model(data)
             self.prediction_list[index] = prediction
-            self.scores[index] = calculate_loss(prediction, target)
-            batch_ground_truth.append(target.item())
-            batch_prediction_list.append(prediction.item())
-            if (index + 1) % self.args.batch_size == 0:
-                np_batch_gt = np.array(batch_ground_truth)
-                np_batch_p = np.array(batch_prediction_list)
+            scores[index] = calculate_loss(prediction, target)
+            temp_gt.append(target.item())
+            temp_pre.append(prediction.item())
+            if (index + 1) % len(self.dataset.test_graphs) == 0:
+                np_batch_gt = np.array(temp_gt)
+                np_batch_p = np.array(temp_pre)
                 prec_at_10_list.append(prec_at_ks(np_batch_gt, np_batch_p, 10))
                 prec_at_20_list.append(prec_at_ks(np_batch_gt, np_batch_p, 20))
-                rho_list.append(calculate_ranking_correlation(spearmanr, np_batch_p, np_batch_gt))
-                tau_list.append(calculate_ranking_correlation(kendalltau, np_batch_p, np_batch_gt))
-                batch_ground_truth.clear()
-                batch_prediction_list.clear()
+                temp_gt.clear()
+                temp_pre.clear()
 
-        mse = np.mean(self.scores)
-        rho = np.mean(rho_list)
-        tau = np.mean(tau_list)
+        mse = np.mean(scores)
+        rho = calculate_ranking_correlation(spearmanr, self.prediction_list, self.ground_truth)
+        tau = calculate_ranking_correlation(kendalltau, self.prediction_list, self.ground_truth)
         p_at_20 = np.mean(prec_at_20_list)
         p_at_10 = np.mean(prec_at_10_list)
         self.print_evaluation(mse, rho, tau, p_at_20, p_at_10)
@@ -245,9 +241,11 @@ class GraphSimTrainer(object):
         delta = np.mean([(n - mean_ground_truth) ** 2 for n in self.ground_truth])
         predicted_delta = np.mean([(n - mean_predicted) ** 2 for n in self.prediction_list])
 
-        print("\nGround truth delta: " + str(round(float(delta), 5)) + ".")
-        print("\nPredicted delta: " + str(round(float(predicted_delta), 5)) + ".")
-        print("\nModel test error(mse): " + str(round(float(mse), 5)) + ".")
+        print("\nGround truth delta: " + str(round(float(delta), 8)) + ".")
+        print("\nGround truth mean: " + str(round(float(mean_ground_truth), 8)) + ".")
+        print("\nPredicted delta: " + str(round(float(predicted_delta), 8)) + ".")
+        print("\nPredicted mean: " + str(round(float(mean_predicted), 8)) + ".")
+        print("\nModel test error(mse): " + str(round(float(mse), 8)) + ".")
         print("rho: ", rho)
         print("tau: ", tau)
         print("p@20:", prec_at_20)

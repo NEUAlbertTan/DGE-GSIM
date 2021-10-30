@@ -19,8 +19,8 @@ class Dataset:
         random.shuffle(training_paths)
         random.shuffle(test_paths)
         if self.args.small_dataset:
-            training_paths = training_paths[:16]
-            test_paths = test_paths[:8]
+            training_paths = training_paths[:30]
+            test_paths = test_paths[:30]
 
         self.training_graphs = []
         for path in training_paths:
