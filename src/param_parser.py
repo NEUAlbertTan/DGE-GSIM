@@ -78,7 +78,7 @@ def parameter_parser():
     parser.add_argument("--embedding-out",
                         default=32)
 
-    parser.add_argument("--label_cut_ratio",
+    parser.add_argument("--cut_edge_ratio",
                         default=1)
 
     """
@@ -143,6 +143,6 @@ def parameter_parser():
     parser.add_argument("--device_num",
                         default='0')
     parser.add_argument("--filename",
-                        default="temp")
+                        default="test")
 
     return parser.parse_args()
