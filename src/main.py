@@ -20,13 +20,12 @@ def main():
     if args.load_model:
         trainer.load()
     else:
-        trainer.fit()
+        trainer.train()
 
     if args.save_model:
-        if trainer.args.validate:
-            trainer.model.load_state_dict(torch.load(trainer.args.best_model_path))
+        trainer.save()
 
-    trainer.score()
+    trainer.test()
 
 
 if __name__ == "__main__":

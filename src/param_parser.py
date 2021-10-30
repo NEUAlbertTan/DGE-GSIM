@@ -1,4 +1,3 @@
-
 import argparse
 
 
@@ -106,7 +105,7 @@ def parameter_parser():
                         default=False)
 
     parser.add_argument("--save-model",
-                        default=False)
+                        default=True)
 
     parser.add_argument("--save-path",
                         type=str,
@@ -114,7 +113,7 @@ def parameter_parser():
                         help="Where to save the trained model")
 
     parser.add_argument("--load-model",
-                        default=True)
+                        default=False)
 
     parser.add_argument("--load-path",
                         type=str,
@@ -122,7 +121,7 @@ def parameter_parser():
                         help="Load a pretrained model")
 
     parser.add_argument("--validate",
-                        default=False)
+                        default=True)
 
     """ 
     dataset settings
@@ -142,8 +141,8 @@ def parameter_parser():
     """
 
     parser.add_argument("--device_num",
-                        default='1')
+                        default='0')
     parser.add_argument("--filename",
-                        default="linux-mt1-new3L-5eVal")
+                        default="temp")
 
     return parser.parse_args()

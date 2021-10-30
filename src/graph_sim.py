@@ -341,7 +341,7 @@ class GraphSimTrainer(object):
             self.min_error = model_error
             torch.save(self.model.state_dict(), self.args.best_model_path)
 
-    def fit(self):
+    def train(self):
         print("\nModel training.\n")
 
         self.optimizer = torch.optim.Adam(self.model.parameters(),
@@ -370,23 +370,25 @@ class GraphSimTrainer(object):
             if self.args.validate:
                 self.validate(epoch_index)
 
-    def score(self):
+        if self.args.validate:
+            self.model.load_state_dict(torch.load(self.args.best_model_path))
+
+    def test(self):
         from utils import calculate_ranking_correlation, prec_at_ks
+
         print("\n\nModel testing.\n")
         self.model.eval()
+
         self.scores = np.zeros(len(self.test_graph_index_pairs))
         self.ground_truth = np.zeros(len(self.test_graph_index_pairs))
         self.prediction_list = np.zeros(len(self.test_graph_index_pairs))
         prec_at_10_list = []
         prec_at_20_list = []
-        mse_list = []
         tau_list = []
         rho_list = []
         batch_ground_truth = []
         batch_prediction_list = []
 
-        if self.args.validate:
-            self.model.load_state_dict(torch.load(self.args.best_model_path))
         for index, test_index_pair in tqdm(enumerate(self.test_graph_index_pairs)):
             data = self.get_data(test_index_pair, mode="test")
             data = self.transfer_to_torch(data)
@@ -401,9 +403,9 @@ class GraphSimTrainer(object):
                 np_batch_gt = np.array(batch_ground_truth)
                 np_batch_p = np.array(batch_prediction_list)
                 prec_at_10_list.append(prec_at_ks(np_batch_gt, np_batch_p, 10))
-                prec_at_20_list.append(prec_at_ks(np_batch_gt, np_batch_p, 10))
-                tau_list.append(calculate_ranking_correlation(spearmanr, np_batch_p, np_batch_gt))
-                rho_list.append(calculate_ranking_correlation(kendalltau, np_batch_p, np_batch_gt))
+                prec_at_20_list.append(prec_at_ks(np_batch_gt, np_batch_p, 20))
+                rho_list.append(calculate_ranking_correlation(spearmanr, np_batch_p, np_batch_gt))
+                tau_list.append(calculate_ranking_correlation(kendalltau, np_batch_p, np_batch_gt))
                 batch_ground_truth.clear()
                 batch_prediction_list.clear()
 
