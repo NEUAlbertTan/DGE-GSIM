@@ -1,6 +1,8 @@
 import glob
 import random
 import pickle
+
+import networkx as nx
 import torch
 import numpy as np
 from utils import get_data_from_path
@@ -17,7 +19,7 @@ class Dataset:
         training_paths = glob.glob(args.training_root_path + "*.gexf")
         test_paths = glob.glob(args.test_root_path + "*.gexf")
         self.training_paths = training_paths
-        self.test_paths= test_paths
+        self.test_paths = test_paths
         random.shuffle(training_paths)
         random.shuffle(test_paths)
         if self.args.small_dataset:
@@ -198,9 +200,38 @@ class Dataset:
         new_data["target"] = torch.from_numpy(np.exp(-norm_ged).reshape(1, 1)).view(-1).float().to(self.args.device)
         return new_data
 
-    def get_matching_list(self, test_graph_index):
+    def show_matching_list(self, query_graph_index):
         from utils import get_file_id_from_path
+        import matplotlib.pyplot as plt
 
-        tar_test_graph_path = self.test_paths[test_graph_index]
-        tar_test_graph_id = get_file_id_from_path(tar_test_graph_path)
+        query_graph_path = self.test_paths[query_graph_index]
+        print("Query graph id: " + get_file_id_from_path(query_graph_path))
+        query_graph = nx.read_gexf(query_graph_path)
+        nx.draw_networkx(query_graph)
+        plt.show()
+        tar_test_graph_id = get_file_id_from_path(query_graph_path)
 
+        n_ged_rank_id_list = []
+        for key in self.ged_dict:
+            if key[0] == int(tar_test_graph_id):
+                key_graph = nx.read_gexf(self.args.training_root_path + str(key[1]) + ".gexf")
+                n_ged = self.ged_dict[key]
+                n_ged = n_ged / (0.5 * (len(query_graph.nodes()) + len(key_graph.nodes())))
+                n_ged_rank_id_list.append((key[1], n_ged))
+
+        n_ged_rank_id_list.sort(key=lambda x: x[1])
+        for i in range(0, 10):
+            g_id = n_ged_rank_id_list[i][0]
+            n_ged = n_ged_rank_id_list[i][1]
+            key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + " nGED: " + str(n_ged))
+
+        for i in range(1, 11):
+            g_id = n_ged_rank_id_list[-i][0]
+            n_ged = n_ged_rank_id_list[-i][1]
+            key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + " nGED: " + str(n_ged))

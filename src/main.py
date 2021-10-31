@@ -25,7 +25,8 @@ def main():
     if args.save_model:
         trainer.save()
 
-    trainer.test()
+    # trainer.test()
+    trainer.show_query()
 
 
 if __name__ == "__main__":

@@ -263,3 +263,6 @@ class GraphSimTrainer(object):
 
     def load(self):
         self.model.load_state_dict(torch.load(self.args.load_path))
+
+    def show_query(self):
+        self.dataset.show_matching_list(0)

@@ -143,6 +143,6 @@ def parameter_parser():
     parser.add_argument("--device_num",
                         default='0')
     parser.add_argument("--filename",
-                        default="test")
+                        default="linux-mt1-new3L-5eVal")
 
     return parser.parse_args()
