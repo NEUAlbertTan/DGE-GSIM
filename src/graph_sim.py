@@ -3,6 +3,7 @@ import numpy as np
 import torch.nn.functional as tnfunc
 from tqdm import tqdm, trange
 from scipy.stats import spearmanr, kendalltau
+import networkx as nx
 
 from dataset import Dataset
 from layers import AvePoolingModule, AttentionModule, TenorNetworkModule, NodeGraphMatchingModule, MT_NEGCN
@@ -264,5 +265,78 @@ class GraphSimTrainer(object):
     def load(self):
         self.model.load_state_dict(torch.load(self.args.load_path))
 
+    def show_ged_query(self, query_graph_index):
+        from utils import get_file_id_from_path
+        import matplotlib.pyplot as plt
+
+        query_graph_path = self.dataset.test_paths[query_graph_index]
+        print("Query graph id: " + get_file_id_from_path(query_graph_path))
+        query_graph = nx.read_gexf(query_graph_path)
+        nx.draw_networkx(query_graph)
+        plt.show()
+        tar_test_graph_id = get_file_id_from_path(query_graph_path)
+
+        n_ged_rank_id_list = []
+        for key in self.dataset.ged_dict:
+            if key[0] == int(tar_test_graph_id):
+                key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(key[1]) + ".gexf")
+                n_ged = self.dataset.ged_dict[key]
+                n_ged = n_ged / (0.5 * (len(query_graph.nodes()) + len(key_graph.nodes())))
+                n_ged_rank_id_list.append((key[1], n_ged))
+
+        n_ged_rank_id_list.sort(key=lambda x: x[1])
+        for i in range(0, 10):
+            g_id = n_ged_rank_id_list[i][0]
+            n_ged = n_ged_rank_id_list[i][1]
+            key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + " nGED: " + str(n_ged))
+
+        for i in range(1, 11):
+            g_id = n_ged_rank_id_list[-i][0]
+            n_ged = n_ged_rank_id_list[-i][1]
+            key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + " nGED: " + str(n_ged))
+
+    def show_model_query(self, query_graph_index):
+        from utils import get_file_id_from_path
+        import matplotlib.pyplot as plt
+        self.model.eval()
+
+        query_graph_path = self.args.test_paths[query_graph_index]
+        print("Query graph id: " + get_file_id_from_path(query_graph_path))
+        query_graph = nx.read_gexf(query_graph_path)
+        nx.draw_networkx(query_graph)
+        plt.show()
+        tar_test_graph_id = get_file_id_from_path(query_graph_path)
+
+        n_gSim_rank_id_list = []
+
+        for key in self.dataset.test_graph_index_pairs:
+            if key[0] == int(tar_test_graph_id):
+                score = self.model(self.dataset.transfer_to_torch(self.dataset.get_data(key, mode="test"))).item()
+                n_gSim_rank_id_list.append((key[1], score))
+        n_gSim_rank_id_list.sort(key=lambda x: x[1])
+
+        for i in range(0, 10):
+            g_id = n_gSim_rank_id_list[i][0]
+            predicted_similarity = n_gSim_rank_id_list[i][1]
+            key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + "predicted similarity: " + str(predicted_similarity))
+
+        for i in range(1, 11):
+            g_id = n_gSim_rank_id_list[-i][0]
+            predicted_similarity = n_gSim_rank_id_list[-i][1]
+            key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
+            nx.draw_networkx(key_graph)
+            plt.show()
+            print(str(g_id) + "predicted similarity: " + str(predicted_similarity))
+
     def show_query(self):
-        self.dataset.show_matching_list(0)
+        self.show_ged_query(0)
+        self.show_model_query(0)
