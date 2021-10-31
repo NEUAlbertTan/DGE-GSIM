@@ -105,7 +105,7 @@ def parameter_parser():
                         default=False)
 
     parser.add_argument("--save-model",
-                        default=True)
+                        default=False)
 
     parser.add_argument("--save-path",
                         type=str,
@@ -113,7 +113,7 @@ def parameter_parser():
                         help="Where to save the trained model")
 
     parser.add_argument("--load-model",
-                        default=False)
+                        default=True)
 
     parser.add_argument("--load-path",
                         type=str,
@@ -121,7 +121,7 @@ def parameter_parser():
                         help="Load a pretrained model")
 
     parser.add_argument("--validate",
-                        default=True)
+                        default=False)
 
     """ 
     dataset settings

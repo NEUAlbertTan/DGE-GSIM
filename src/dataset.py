@@ -16,6 +16,8 @@ class Dataset:
         '''
         training_paths = glob.glob(args.training_root_path + "*.gexf")
         test_paths = glob.glob(args.test_root_path + "*.gexf")
+        self.training_paths = training_paths
+        self.test_paths= test_paths
         random.shuffle(training_paths)
         random.shuffle(test_paths)
         if self.args.small_dataset:
@@ -89,12 +91,6 @@ class Dataset:
 
         self.number_of_node_labels = len(self.global_node_labels)
         self.number_of_edge_labels = len(self.global_edge_labels)
-
-    def get_training_graphs(self):
-        return self.training_graphs
-
-    def get_test_graphs(self):
-        return self.test_graphs
 
     def get_data(self, graph_index_pair, mode="training"):
         data = dict()
@@ -201,3 +197,10 @@ class Dataset:
 
         new_data["target"] = torch.from_numpy(np.exp(-norm_ged).reshape(1, 1)).view(-1).float().to(self.args.device)
         return new_data
+
+    def get_matching_list(self, test_graph_index):
+        from utils import get_file_id_from_path
+
+        tar_test_graph_path = self.test_paths[test_graph_index]
+        tar_test_graph_id = get_file_id_from_path(tar_test_graph_path)
+
