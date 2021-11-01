@@ -285,7 +285,7 @@ class GraphSimTrainer(object):
                 n_ged_rank_id_list.append((key[1], n_ged))
 
         n_ged_rank_id_list.sort(key=lambda x: x[1])
-        for i in range(0, 10):
+        for i in range(0, 5):
             g_id = n_ged_rank_id_list[i][0]
             n_ged = n_ged_rank_id_list[i][1]
             key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(g_id) + ".gexf")
@@ -293,7 +293,14 @@ class GraphSimTrainer(object):
             plt.show()
             print(str(g_id) + " nGED: " + str(n_ged))
 
-        for i in range(1, 11):
+        g_id = n_ged_rank_id_list[400][0]
+        n_ged = n_ged_rank_id_list[400][1]
+        key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(g_id) + ".gexf")
+        nx.draw_networkx(key_graph)
+        plt.show()
+        print(str(g_id) + " nGED: " + str(n_ged))
+
+        for i in range(1, 6):
             g_id = n_ged_rank_id_list[-i][0]
             n_ged = n_ged_rank_id_list[-i][1]
             key_graph = nx.read_gexf(self.dataset.args.training_root_path + str(g_id) + ".gexf")
@@ -306,7 +313,7 @@ class GraphSimTrainer(object):
         import matplotlib.pyplot as plt
         self.model.eval()
 
-        query_graph_path = self.args.test_paths[query_graph_index]
+        query_graph_path = self.dataset.test_paths[query_graph_index]
         print("Query graph id: " + get_file_id_from_path(query_graph_path))
         query_graph = nx.read_gexf(query_graph_path)
         nx.draw_networkx(query_graph)
@@ -316,12 +323,12 @@ class GraphSimTrainer(object):
         n_gSim_rank_id_list = []
 
         for key in self.dataset.test_graph_index_pairs:
-            if key[0] == int(tar_test_graph_id):
+            if key[0] == int(query_graph_index):
                 score = self.model(self.dataset.transfer_to_torch(self.dataset.get_data(key, mode="test"))).item()
-                n_gSim_rank_id_list.append((key[1], score))
+                n_gSim_rank_id_list.append((get_file_id_from_path(self.dataset.training_paths[key[1]]), score))
         n_gSim_rank_id_list.sort(key=lambda x: x[1])
 
-        for i in range(0, 10):
+        for i in range(0, 5):
             g_id = n_gSim_rank_id_list[i][0]
             predicted_similarity = n_gSim_rank_id_list[i][1]
             key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
@@ -329,7 +336,14 @@ class GraphSimTrainer(object):
             plt.show()
             print(str(g_id) + "predicted similarity: " + str(predicted_similarity))
 
-        for i in range(1, 11):
+        g_id = n_gSim_rank_id_list[400][0]
+        predicted_similarity = n_gSim_rank_id_list[400][1]
+        key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
+        nx.draw_networkx(key_graph)
+        plt.show()
+        print(str(g_id) + "predicted similarity: " + str(predicted_similarity))
+
+        for i in range(1, 6):
             g_id = n_gSim_rank_id_list[-i][0]
             predicted_similarity = n_gSim_rank_id_list[-i][1]
             key_graph = nx.read_gexf(self.args.training_root_path + str(g_id) + ".gexf")
@@ -338,5 +352,6 @@ class GraphSimTrainer(object):
             print(str(g_id) + "predicted similarity: " + str(predicted_similarity))
 
     def show_query(self):
-        self.show_ged_query(0)
-        self.show_model_query(0)
+        for i in range(len(self.dataset.test_graphs)):
+            self.show_ged_query(i)
+            self.show_model_query(i)

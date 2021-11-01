@@ -66,6 +66,11 @@ def parameter_parser():
     parser.add_argument("--node-nhid-3",
                         default=16)
 
+    parser.add_argument("--share-nhid-1",
+                        default=32)
+    parser.add_argument("--share-nhid-2",
+                        default=16)
+
     parser.add_argument("--edge-nhid-1",
                         default=64)
     parser.add_argument("--edge-nhid-2",

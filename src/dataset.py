@@ -18,10 +18,10 @@ class Dataset:
         '''
         training_paths = glob.glob(args.training_root_path + "*.gexf")
         test_paths = glob.glob(args.test_root_path + "*.gexf")
-        self.training_paths = training_paths
-        self.test_paths = test_paths
         random.shuffle(training_paths)
         random.shuffle(test_paths)
+        self.training_paths = training_paths
+        self.test_paths = test_paths
         if self.args.small_dataset:
             training_paths = training_paths[:30]
             test_paths = test_paths[:30]
