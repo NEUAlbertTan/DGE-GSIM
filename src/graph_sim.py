@@ -52,7 +52,22 @@ class GraphSim(torch.nn.Module):
         self.scoring_layer = torch.nn.Linear(self.args.bottle_neck_neurons, 1).to(self.args.device)
 
     def calculate_histogram(self, abstract_features_1, abstract_features_2):
-        scores = torch.mm(abstract_features_1, abstract_features_2).detach().to(self.args.device)
+        n_1 = abstract_features_1.size(0)
+        n_2 = abstract_features_2.size(0)
+        if n_1 > n_2:
+            scores = torch.mm(
+                abstract_features_1,
+                torch.cat((
+                    abstract_features_2,
+                    torch.zeros((n_1 - n_2, abstract_features_2.size(1))).to(self.args.device)
+                ), dim=0).t().to(self.args.device)
+            ).detach().to(self.args.device)
+        elif n_1 < n_2:
+            scores = torch.mm(torch.cat(
+                (abstract_features_1, torch.zeros((n_2 - n_1, abstract_features_1.size(1))).to(self.args.device))).to(
+                self.args.device), abstract_features_2.t()).detach().to(self.args.device)
+        else:
+            scores = torch.mm(abstract_features_1, abstract_features_2.t()).detach().to(self.args.device)
         scores = scores.view(-1, 1)
         hist = torch.histc(scores, bins=self.args.bins).to(self.args.device)
         hist = hist / torch.sum(hist)
@@ -67,8 +82,7 @@ class GraphSim(torch.nn.Module):
                                                                   data["edge_features_2"], data["trans_edge_index_2"])
 
         if self.args.histogram:
-            hist = self.calculate_histogram(abstract_features_1,
-                                            torch.t(abstract_features_2))
+            hist = self.calculate_histogram(abstract_features_1, abstract_features_2)
 
         if self.args.tensor_network:
             if self.args.attention_module:
