@@ -23,7 +23,7 @@ class GraphSim(torch.nn.Module):
         tensor_layer_out = self.args.tensor_neurons * 2
 
         if self.args.histogram:
-            self.feature_count = tensor_layer_out + self.args.bins
+            self.feature_count = tensor_layer_out + self.args.bins * 2
         else:
             self.feature_count = tensor_layer_out
 
@@ -83,6 +83,7 @@ class GraphSim(torch.nn.Module):
 
         if self.args.histogram:
             hist = self.calculate_histogram(abstract_features_1, abstract_features_2)
+            edge_hist = self.calculate_histogram(edge_features_1, edge_features_2)
 
         if self.args.tensor_network:
             if self.args.attention_module:
@@ -103,6 +104,7 @@ class GraphSim(torch.nn.Module):
 
             if self.args.histogram:
                 scores = torch.cat((scores, hist), dim=1).view(1, -1)
+                scores = torch.cat((scores, edge_hist), dim=1).view(1, -1)
         else:
             scores = hist.view(1, -1)
 
